@@ -1,4 +1,4 @@
-# Crop Trait Prediction System
+# AttGEI-Net
 
 A deep learning-based system for predicting crop trait performance by integrating genotype data and environmental data to achieve high-precision predictions.
 
@@ -13,7 +13,7 @@ A deep learning-based system for predicting crop trait performance by integratin
 
 ## Project Overview
 
-This project aims to predict crop trait performance for different genotypes under various environmental conditions using deep learning technology. By effectively capturing complex interactions between genotypes and environments, the system delivers accurate crop performance predictions, providing data support for crop breeding and agricultural decision-making.
+This project aims to predict cotton trait phenotype for different genotypes under various environmental conditions using deep learning technology. By effectively capturing complex interactions between genotypes and environments, the system delivers accurate cotton phenotype predictions, providing data support for cotton breeding and agricultural decision-making.
 
 ### Key Features
 
@@ -68,7 +68,7 @@ The project processes three types of data:
    - Time series data containing various meteorological and soil parameters
 
 3. **Phenotype Data** (characteristic/*.txt):
-   - Trait performance of each genotype under specific environments
+   - Trait phenotype of each genotype under specific environments
    - File naming format: "location_year.txt"
 
 ### Data Processing Workflow
@@ -174,4 +174,5 @@ After executing experiments, the following results will be generated:
 
 ```bash
 pip install torch numpy pandas scikit-learn matplotlib
+
 ``` 
