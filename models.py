@@ -4,13 +4,13 @@ import torch.nn.functional as F
 
 class DeepGxE(nn.Module):
     """
-    深度学习模型，用于预测基因型-环境交互作用下的作物性状
-    结合基因型数据和环境数据预测表型
+    Deep learning model for predicting crop traits under genotype-environment interactions
+    Combines genotype data and environmental data to predict phenotype
     """
     def __init__(self, geno_dim, env_dim, hidden_dim=256, dropout=0.3):
         super(DeepGxE, self).__init__()
         
-        # 基因型特征提取网络 - 更深层网络
+        # Genotype feature extraction network - deeper network
         self.geno_encoder = nn.Sequential(
             nn.Linear(geno_dim, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -26,7 +26,7 @@ class DeepGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 环境特征提取网络 - 更深层网络
+        # Environmental feature extraction network - deeper network
         self.env_encoder = nn.Sequential(
             nn.Linear(env_dim, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -42,7 +42,7 @@ class DeepGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 特征融合网络
+        # Feature fusion network
         self.fusion_layer = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim // 2),
             nn.LeakyReLU(0.2),
@@ -56,20 +56,20 @@ class DeepGxE(nn.Module):
         )
     
     def forward(self, geno, env):
-        # 特征提取
+        # Feature extraction
         geno_features = self.geno_encoder(geno)
         env_features = self.env_encoder(env)
         
-        # 特征融合（拼接）
+        # Feature fusion (concatenation)
         fused_features = torch.cat((geno_features, env_features), dim=1)
         
-        # 预测
+        # Prediction
         output = self.fusion_layer(fused_features)
         
         return output
 
 class ResidualBlock(nn.Module):
-    """残差块，用于CNNGxE模型"""
+    """Residual block for CNNGxE model"""
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
         super(ResidualBlock, self).__init__()
         
@@ -79,7 +79,7 @@ class ResidualBlock(nn.Module):
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, 1, padding)
         self.bn2 = nn.BatchNorm2d(out_channels)
         
-        # 如果输入和输出通道数不同，用1x1卷积调整通道数
+        # If input and output channels differ, use 1x1 convolution to adjust channels
         self.shortcut = nn.Sequential()
         if stride != 1 or in_channels != out_channels:
             self.shortcut = nn.Sequential(
@@ -104,30 +104,31 @@ class ResidualBlock(nn.Module):
 
 class CNNGxE(nn.Module):
     """
-    增强版CNN模型，用于处理基因型和环境数据的交互
-    使用残差卷积网络提取环境特征，多层感知机提取基因型特征
+    Enhanced CNN model for processing genotype-environment interactions
+    Uses residual convolutional networks to extract environmental features, 
+    and multilayer perceptron to extract genotype features
     """
     def __init__(self, geno_dim, env_dim, env_width=53, env_height=53, hidden_dim=256, dropout=0.3):
         super(CNNGxE, self).__init__()
         
-        # 保存环境特征尺寸
+        # Save environment feature dimensions
         self.env_width = env_width
         self.env_height = env_height
         self.env_dim = env_dim
         
-        # 自动调整CNN输入尺寸，确保足够容纳增强后的环境特征
-        # 计算需要的最小面积
+        # Automatically adjust CNN input size to accommodate enhanced environmental features
+        # Calculate minimum required area
         min_area = env_dim
         
-        # 找到合适的矩形尺寸，保持宽高比接近1:1
+        # Find suitable rectangle dimensions with aspect ratio close to 1:1
         self.actual_env_width = int(round(torch.sqrt(torch.tensor(min_area)).item()))
-        self.actual_env_height = int((min_area + self.actual_env_width - 1) // self.actual_env_width)  # 向上取整
+        self.actual_env_height = int((min_area + self.actual_env_width - 1) // self.actual_env_width)  # Round up
         
-        # 确保总面积大于等于env_dim
+        # Ensure total area is greater than or equal to env_dim
         if self.actual_env_width * self.actual_env_height < min_area:
             self.actual_env_width += 1
         
-        # 基因型特征提取网络 - 更深层网络
+        # Genotype feature extraction network - deeper network
         self.geno_encoder = nn.Sequential(
             nn.Linear(geno_dim, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -143,7 +144,7 @@ class CNNGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 环境特征直接处理层 - 为避免CNN处理过大的特征，先降维
+        # Environment feature direct processing layer - dimensionality reduction before CNN
         self.env_dim_reducer = nn.Sequential(
             nn.Linear(env_dim, hidden_dim * 2),
             nn.LeakyReLU(0.2),
@@ -155,7 +156,7 @@ class CNNGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 环境特征处理 - 转成CNN可处理的尺寸
+        # Environment feature processing - conversion to CNN-processable dimensions
         self.env_reshaper = nn.Sequential(
             nn.Linear(hidden_dim, 64 * 8 * 8),
             nn.LeakyReLU(0.2),
@@ -163,24 +164,24 @@ class CNNGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 环境特征提取网络 - 使用残差卷积网络
+        # Environment feature extraction network - using residual convolutional networks
         self.conv1 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1)
         self.bn1 = nn.BatchNorm2d(32)
         self.relu = nn.ReLU(inplace=True)
         
-        # 添加残差块
+        # Add residual blocks
         self.res_block1 = ResidualBlock(32, 32)
         self.res_block2 = ResidualBlock(32, 64, stride=2)
         self.res_block3 = ResidualBlock(64, 64)
         self.res_block4 = ResidualBlock(64, 128, stride=2)
         
-        # 全局平均池化
+        # Global average pooling
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         
-        # 环境特征扁平化后的维度
+        # Flattened dimension of environmental features
         self.env_flatten_dim = 128
         
-        # 环境特征处理
+        # Environmental feature processing
         self.env_fc = nn.Sequential(
             nn.Linear(self.env_flatten_dim, hidden_dim // 2),
             nn.LeakyReLU(0.2),
@@ -188,7 +189,7 @@ class CNNGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 特征融合层
+        # Feature fusion layer
         self.fusion_layer = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim // 2),
             nn.LeakyReLU(0.2),
@@ -202,20 +203,20 @@ class CNNGxE(nn.Module):
         )
     
     def forward(self, geno, env):
-        # 基因型特征提取
+        # Genotype feature extraction
         geno_features = self.geno_encoder(geno)
         
-        # 环境特征先降维，避免CNN处理过大的尺寸
+        # Environmental feature dimensionality reduction
         batch_size = env.size(0)
         
-        # 先使用MLP将环境特征降维
+        # First use MLP to reduce environmental features
         reduced_env = self.env_dim_reducer(env)
         
-        # 转换为CNN可处理的形状
+        # Convert to CNN-processable shape
         cnn_input = self.env_reshaper(reduced_env)
         cnn_input = cnn_input.view(batch_size, 64, 8, 8)
         
-        # 环境特征提取 - 残差卷积网络
+        # Environmental feature extraction - residual convolutional networks
         x = self.conv1(cnn_input)
         x = self.bn1(x)
         x = self.relu(x)
@@ -230,16 +231,16 @@ class CNNGxE(nn.Module):
         
         env_features = self.env_fc(x)
         
-        # 特征融合
+        # Feature fusion
         fused_features = torch.cat((geno_features, env_features), dim=1)
         
-        # 预测
+        # Prediction
         output = self.fusion_layer(fused_features)
         
         return output
 
 class MultiHeadAttention(nn.Module):
-    """多头注意力机制"""
+    """Multi-head attention mechanism"""
     def __init__(self, embed_dim, num_heads):
         super(MultiHeadAttention, self).__init__()
         self.multihead_attn = nn.MultiheadAttention(embed_dim, num_heads, batch_first=True)
@@ -250,15 +251,16 @@ class MultiHeadAttention(nn.Module):
 
 class AttentionGxE(nn.Module):
     """
-    注意力模型，使用多头注意力机制捕捉基因型和环境之间的交互
+    Attention model using multi-head attention mechanism to capture complex interactions
+    between genotype and environment
     """
     def __init__(self, geno_dim, env_dim, hidden_dim=256, num_heads=4, dropout=0.3):
         super(AttentionGxE, self).__init__()
         
-        # 确保hidden_dim可以被num_heads整除
-        assert hidden_dim % num_heads == 0, "hidden_dim必须能被num_heads整除"
+        # Ensure hidden_dim is divisible by num_heads
+        assert hidden_dim % num_heads == 0, "hidden_dim must be divisible by num_heads"
         
-        # 基因型编码器
+        # Genotype encoder
         self.geno_encoder = nn.Sequential(
             nn.Linear(geno_dim, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -270,7 +272,7 @@ class AttentionGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 环境编码器
+        # Environment encoder
         self.env_encoder = nn.Sequential(
             nn.Linear(env_dim, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -282,10 +284,10 @@ class AttentionGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 多头注意力层
+        # Multi-head attention layer
         self.mha = MultiHeadAttention(hidden_dim, num_heads)
         
-        # 特征融合层
+        # Feature fusion layer
         self.fusion_layer = nn.Sequential(
             nn.Linear(hidden_dim * 2, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -301,39 +303,43 @@ class AttentionGxE(nn.Module):
     def forward(self, geno, env):
         batch_size = geno.size(0)
         
-        # 特征提取
+        # Feature extraction
         geno_features = self.geno_encoder(geno)
         env_features = self.env_encoder(env)
         
-        # 为多头注意力准备输入 - 扩展维度以符合注意力机制的输入要求
+        # Prepare inputs for multi-head attention - expand dimensions to match attention requirements
         # [batch_size, 1, hidden_dim]
         geno_features_expanded = geno_features.unsqueeze(1)
         env_features_expanded = env_features.unsqueeze(1)
         
-        # 应用多头注意力 - 使用基因型特征作为query，环境特征作为key和value
+        # Apply multi-head attention - use genotype features as query, environment features as key and value
         attended_geno = self.mha(geno_features_expanded, env_features_expanded, env_features_expanded)
         attended_env = self.mha(env_features_expanded, geno_features_expanded, geno_features_expanded)
         
-        # 压缩回原始维度 [batch_size, hidden_dim]
+        # Compress back to original dimensions [batch_size, hidden_dim]
         attended_geno = attended_geno.squeeze(1)
         attended_env = attended_env.squeeze(1)
         
-        # 融合特征 - 拼接原始特征和注意力处理后的特征
+        # Feature fusion - concatenate original features and attention-processed features
         fused_features = torch.cat((attended_geno, attended_env), dim=1)
         
-        # 预测
+        # Prediction
         output = self.fusion_layer(fused_features)
         
         return output
 
 class CrossAttentionGxE(nn.Module):
+    """
+    Cross-attention model with increased feature extraction depth, interaction modeling capability,
+    and self-attention mechanism designed specifically for complex genotype-environment interaction modeling
+    """
     def __init__(self, geno_dim, env_dim, hidden_dim=512, num_heads=8, dropout=0.2):
         super(CrossAttentionGxE, self).__init__()
         
-        # 确保hidden_dim可以被num_heads整除
-        assert hidden_dim % num_heads == 0, "hidden_dim必须能被num_heads整除"
+        # Ensure hidden_dim is divisible by num_heads
+        assert hidden_dim % num_heads == 0, "hidden_dim must be divisible by num_heads"
         
-        # 增强的基因型编码器 - 更深层网络
+        # Enhanced genotype encoder - deeper network
         self.geno_encoder = nn.Sequential(
             nn.Linear(geno_dim, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -348,7 +354,7 @@ class CrossAttentionGxE(nn.Module):
             nn.BatchNorm1d(hidden_dim)
         )
         
-        # 增强的环境编码器 - 更深层网络
+        # Enhanced environment encoder - deeper network
         self.env_encoder = nn.Sequential(
             nn.Linear(env_dim, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -363,10 +369,10 @@ class CrossAttentionGxE(nn.Module):
             nn.BatchNorm1d(hidden_dim)
         )
         
-        # 多头自注意力机制，增加头数获取更丰富的特征关系
+        # Multi-head self-attention mechanism, increased head count for richer feature relationships
         self.self_attention = nn.MultiheadAttention(hidden_dim, num_heads, batch_first=True)
         
-        # 交互层 - 特别针对基因型-环境交互建模
+        # Interaction layer - specifically for genotype-environment interaction modeling
         self.interaction_layer = nn.Sequential(
             nn.Linear(hidden_dim*2, hidden_dim),
             nn.LeakyReLU(0.2),
@@ -378,10 +384,10 @@ class CrossAttentionGxE(nn.Module):
             nn.Dropout(dropout)
         )
         
-        # 添加直接交互计算 - 基因型与环境的显式交互
+        # Add direct interaction calculation - explicit genotype-environment interaction
         self.cross_layer = nn.Bilinear(hidden_dim, hidden_dim, hidden_dim//2)
         
-        # 预测层
+        # Prediction layer
         self.predictor = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim//2),
             nn.LeakyReLU(0.2),
@@ -394,31 +400,31 @@ class CrossAttentionGxE(nn.Module):
         )
 
     def forward(self, geno, env):
-        # 编码基因型和环境
+        # Encode genotype and environment
         geno_features = self.geno_encoder(geno)
         env_features = self.env_encoder(env)
         
-        # 自注意力处理
+        # Self-attention processing
         batch_size = geno_features.size(0)
-        # 将基因型和环境特征拼接成序列用于自注意力
+        # Concatenate genotype and environment features as a sequence for self-attention
         combined = torch.cat([geno_features.unsqueeze(1), env_features.unsqueeze(1)], dim=1)
         attn_output, _ = self.self_attention(combined, combined, combined)
         
-        # 提取注意力后的特征
+        # Extract post-attention features
         attn_geno = attn_output[:, 0, :]
         attn_env = attn_output[:, 1, :]
         
-        # 特征融合 - 拼接
+        # Feature fusion - concatenation
         concat_features = torch.cat([attn_geno, attn_env], dim=1)
         interaction_features = self.interaction_layer(concat_features)
         
-        # 显式基因型-环境交互
+        # Explicit genotype-environment interaction
         cross_features = self.cross_layer(geno_features, env_features)
         
-        # 融合所有特征
+        # Fuse all features
         final_features = torch.cat([interaction_features, cross_features], dim=1)
         
-        # 预测
+        # Prediction
         output = self.predictor(final_features)
         
-        return output 
+        return output
