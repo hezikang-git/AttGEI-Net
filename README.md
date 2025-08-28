@@ -1,176 +1,176 @@
-# 作物性状预测系统
+# Crop Trait Prediction System
 
-基于深度学习的作物性状预测系统，结合基因型数据和环境数据实现高精度作物性状表现预测。
+A deep learning-based system for predicting crop trait performance by integrating genotype data and environmental data to achieve high-precision predictions.
 
-## 目录
+## Table of Contents
 
-- [项目概述](#项目概述)
-- [模型架构](#模型架构)
-- [数据处理](#数据处理)
-- [实验设计](#实验设计)
-- [使用指南](#使用指南)
-- [系统要求](#系统要求)
+- [Project Overview](#project-overview)
+- [Model Architecture](#model-architecture)
+- [Data Processing](#data-processing)
+- [Experimental Design](#experimental-design)
+- [Usage Guide](#usage-guide)
+- [System Requirements](#system-requirements)
 
-## 项目概述
+## Project Overview
 
-本项目旨在通过深度学习技术预测不同基因型在各种环境条件下的作物性状表现。通过有效捕捉基因型与环境之间的复杂交互关系，实现对作物表现的精确预测，为作物育种和农业决策提供数据支持。
+This project aims to predict crop trait performance for different genotypes under various environmental conditions using deep learning technology. By effectively capturing complex interactions between genotypes and environments, the system delivers accurate crop performance predictions, providing data support for crop breeding and agricultural decision-making.
 
-### 主要特点
+### Key Features
 
-- 结合基因型和环境数据的多模型集成架构
-- 专门设计的交叉注意力机制，有效捕捉G×E交互关系
-- 基于多种实验设计的全面评估系统
-- 针对不同预测场景的优化策略
+- Multi-model ensemble architecture integrating genotype and environmental data
+- Specialized cross-attention mechanism effectively capturing G×E interactions
+- Comprehensive evaluation system based on multiple experimental designs
+- Optimization strategies for different prediction scenarios
 
-## 模型架构
+## Model Architecture
 
-项目中实现了多种深度学习模型架构：
+The project implements multiple deep learning model architectures:
 
 ### 1. DeepGxE
 
-基础深度学习模型，使用多层感知机分别提取基因型和环境特征，然后融合预测表型。
+Basic deep learning model using multilayer perceptrons to extract genotype and environmental features separately, then fusing them to predict phenotypes.
 
 ```
-基因型数据 → 多层感知机 → 特征融合层 → 表型预测
-环境数据 → 多层感知机 ↗
+Genotype data → Multilayer perceptron → Feature fusion layer → Phenotype prediction
+Environment data → Multilayer perceptron ↗
 ```
 
 ### 2. AttentionGxE
 
-标准注意力模型，使用4个注意力头捕捉基因型和环境特征之间的交互关系。
+Standard attention model using 4 attention heads to capture interactions between genotype and environmental features.
 
 ```
-基因型数据 → 编码器 → 多头注意力机制 → 特征融合 → 表型预测
-环境数据 → 编码器 ↗
+Genotype data → Encoder → Multi-head attention mechanism → Feature fusion → Phenotype prediction
+Environment data → Encoder ↗
 ```
 
 ### 3. CrossAttentionGxE
 
-交叉注意力模型，使用8个注意力头和双线性交互层增强基因型-环境交互建模。
+Cross-attention model with 8 attention heads and a bilinear interaction layer to enhance genotype-environment interaction modeling.
 
 ```
-基因型数据 → 深层编码器 → 自注意力机制 → 交互层 → 表型预测
-环境数据 → 深层编码器 → 双线性交互层 ↗
+Genotype data → Deep encoder → Self-attention mechanism → Interaction layer → Phenotype prediction
+Environment data → Deep encoder → Bilinear interaction layer ↗
 ```
 
-## 数据处理
+## Data Processing
 
-### 数据结构
+### Data Structure
 
-项目处理三类数据：
+The project processes three types of data:
 
-1. **基因型数据** (genodata.txt)：
-   - 每行代表一个样本，列为基因型标记
-   - 值为-1、0或1的矩阵
+1. **Genotype Data** (genodata.txt):
+   - Each row represents a sample, columns are genotype markers
+   - Matrix of values (-1, 0, or 1)
 
-2. **环境数据** (environment/*.xlsx)：
-   - 不同地点和年份的环境指标
-   - 包含多种气象和土壤参数的时间序列数据
+2. **Environmental Data** (environment/*.xlsx):
+   - Environmental indicators for different locations and years
+   - Time series data containing various meteorological and soil parameters
 
-3. **表型数据** (characteristic/*.txt)：
-   - 每个基因型在特定环境下的性状表现
-   - 文件名格式为"地点_年份.txt"
+3. **Phenotype Data** (characteristic/*.txt):
+   - Trait performance of each genotype under specific environments
+   - File naming format: "location_year.txt"
 
-### 数据处理流程
+### Data Processing Workflow
 
 ```
-数据加载 → 数据标准化 → 特征扩展 → 交叉验证划分
+Data loading → Data standardization → Feature extension → Cross-validation splitting
 ```
 
-- **标准化**：使用鲁棒标准化方法处理异常值
-- **特征扩展**：增强环境特征，添加统计和非线性特征
-- **分层交叉验证**：根据实验设计创建适合的交叉验证方案
+- **Standardization**: Robust standardization methods to handle outliers
+- **Feature Extension**: Enhanced environmental features, adding statistical and non-linear features
+- **Stratified Cross-Validation**: Creating appropriate cross-validation schemes based on experimental design
 
-## 实验设计
+## Experimental Design
 
-项目设计了三种互补的实验方案，全面评估模型的泛化能力：
+The project employs three complementary experimental designs to comprehensively evaluate model generalization capabilities:
 
-### 实验1：基因型泛化能力测试
+### Experiment 1: Genotype Generalization Testing
 
-- **目标**：评估模型对新基因型的预测能力
-- **数据划分**：全部12个环境，90%基因型训练，10%基因型测试
-- **交叉验证**：10折交叉验证（按基因型划分）
-- **脚本**：`main1.py`
+- **Objective**: Evaluate model prediction ability for new genotypes
+- **Data Split**: All 12 environments, 90% genotypes for training, 10% genotypes for testing
+- **Cross-Validation**: 10-fold cross-validation (by genotype)
+- **Script**: `main1.py`
 
-### 实验2：环境泛化能力测试
+### Experiment 2: Environment Generalization Testing
 
-- **目标**：评估模型对新环境的预测能力
-- **数据划分**：5个地点（10个环境）训练，1个地点（2个环境）测试
-- **交叉验证**：6折交叉验证（按地点划分）
-- **脚本**：`main2.py`
+- **Objective**: Evaluate model prediction ability for new environments
+- **Data Split**: 5 locations (10 environments) for training, 1 location (2 environments) for testing
+- **Cross-Validation**: 6-fold cross-validation (by location)
+- **Script**: `main2.py`
 
-### 实验3：综合泛化能力测试
+### Experiment 3: Comprehensive Generalization Testing
 
-- **目标**：评估模型对新基因型在新环境下的预测能力
-- **数据划分**：5个地点（10个环境）和90%基因型训练，1个地点和10%基因型测试
-- **交叉验证**：60组组合交叉验证（10折基因型 × 6折地点）
-- **脚本**：`main3.py`
+- **Objective**: Evaluate model prediction ability for new genotypes in new environments
+- **Data Split**: 5 locations (10 environments) and 90% genotypes for training, 1 location and 10% genotypes for testing
+- **Cross-Validation**: 60 combined cross-validation groups (10-fold genotype × 6-fold location)
+- **Script**: `main3.py`
 
-## 使用指南
+## Usage Guide
 
-### 项目结构
+### Project Structure
 
 ```
 .
-├── basedata/                # 训练数据文件夹
-│   ├── BPP/                 # 不同性状文件夹
-│   │   ├── genodata.txt     # 基因型数据
-│   │   ├── environment/     # 环境数据文件夹
-│   │   └── characteristic/  # 表型数据文件夹
-│   └── ...                  # 其他性状
-├── testdata/                # 测试数据文件夹
-├── models.py                # 模型定义
-├── utils.py                 # 工具函数
-├── trainer.py               # 训练器
-├── main1.py                 # 实验1主程序
-├── main2.py                 # 实验2主程序
-├── main3.py                 # 实验3主程序
-└── run_experiment.py        # 实验执行脚本
+├── basedata/                # Training data folder
+│   ├── BPP/                 # Different trait folders
+│   │   ├── genodata.txt     # Genotype data
+│   │   ├── environment/     # Environmental data folder
+│   │   └── characteristic/  # Phenotype data folder
+│   └── ...                  # Other traits
+├── testdata/                # Testing data folder
+├── models.py                # Model definitions
+├── utils.py                 # Utility functions
+├── trainer.py               # Trainer
+├── main1.py                 # Experiment 1 main program
+├── main2.py                 # Experiment 2 main program
+├── main3.py                 # Experiment 3 main program
+└── run_experiment.py        # Experiment execution script
 ```
 
-### 运行实验
+### Running Experiments
 
 ```bash
-# 运行实验1 - 基因型泛化
+# Run Experiment 1 - Genotype generalization
 python main1.py
 
-# 运行实验2 - 环境泛化
+# Run Experiment 2 - Environment generalization
 python main2.py
 
-# 运行实验3 - 综合泛化
+# Run Experiment 3 - Comprehensive generalization
 python main3.py
 
-# 运行完整实验流程
+# Run complete experiment workflow
 python run_experiment.py
 ```
 
-### 结果解读
+### Interpreting Results
 
-执行实验后，将生成以下结果：
+After executing experiments, the following results will be generated:
 
-1. **训练日志**：包含每个epoch的训练和验证损失
-2. **评估指标**：ARE（绝对相对误差）、MSE（均方误差）和Pearson相关系数
-3. **预测结果**：CSV格式的预测结果文件
-4. **可视化图表**：预测结果和模型性能的图形化展示
+1. **Training Logs**: Containing training and validation losses for each epoch
+2. **Evaluation Metrics**: ARE (Absolute Relative Error), MSE (Mean Squared Error), and Pearson correlation coefficient
+3. **Prediction Results**: CSV format prediction result files
+4. **Visualizations**: Graphical representations of prediction results and model performance
 
-## 系统要求
+## System Requirements
 
-### 硬件要求
+### Hardware Requirements
 
-- CPU：4核以上（推荐）
-- RAM：8GB以上（推荐16GB）
-- GPU：支持CUDA的GPU（可选，但推荐用于加速训练）
+- CPU: 4+ cores (recommended)
+- RAM: 8GB+ (16GB recommended)
+- GPU: CUDA-compatible GPU (optional but recommended for accelerated training)
 
-### 软件依赖
+### Software Dependencies
 
 - Python 3.8+
 - PyTorch 1.8+
 - NumPy
 - Pandas
 - scikit-learn
-- Matplotlib（可视化）
+- Matplotlib (visualization)
 
-### 安装依赖
+### Installing Dependencies
 
 ```bash
 pip install torch numpy pandas scikit-learn matplotlib
