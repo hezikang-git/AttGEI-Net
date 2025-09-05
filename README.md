@@ -1,4 +1,4 @@
-# Crop Trait Prediction System
+# AttGEI-Net
 
 A deep learning-based system for predicting crop trait performance by integrating genotype data and environmental data to achieve high-precision predictions.
 
@@ -171,4 +171,5 @@ After executing experiments, the following results will be generated:
 
 ```bash
 pip install torch numpy pandas scikit-learn matplotlib
+
 ``` 
