@@ -1,4 +1,4 @@
-# AttGEI-Net
+# Crop Trait Prediction System
 
 A deep learning-based system for predicting crop trait performance by integrating genotype data and environmental data to achieve high-precision predictions.
 
@@ -13,45 +13,40 @@ A deep learning-based system for predicting crop trait performance by integratin
 
 ## Project Overview
 
-This project aims to predict cotton trait phenotype for different genotypes under various environmental conditions using deep learning technology. By effectively capturing complex interactions between genotypes and environments, the system delivers accurate cotton phenotype predictions, providing data support for cotton breeding and agricultural decision-making.
+This project aims to predict crop trait performance for different genotypes under various environmental conditions using deep learning technology. By effectively capturing complex interactions between genotypes and environments, the system delivers accurate crop performance predictions, providing data support for crop breeding and agricultural decision-making.
 
 ### Key Features
 
-- Multi-model ensemble architecture integrating genotype and environmental data
-- Specialized cross-attention mechanism effectively capturing G×E interactions
+- Attention mechanism-driven deep learning architecture
+- Specialized cross-attention mechanism effectively capturing Genotype-Environment interactions (G×E)
 - Comprehensive evaluation system based on multiple experimental designs
 - Optimization strategies for different prediction scenarios
 
 ## Model Architecture
 
-The project implements multiple deep learning model architectures:
+This project implements an advanced deep learning architecture: AttGEI-Net
 
-### 1. DeepGxE
+### AttGEI-Net (Attention-based Genotype-Environment Interaction Network)
 
-Basic deep learning model using multilayer perceptrons to extract genotype and environmental features separately, then fusing them to predict phenotypes.
+This is a cross-attention model specifically designed for modeling complex genotype-environment interactions. Its core features include:
 
-```
-Genotype data → Multilayer perceptron → Feature fusion layer → Phenotype prediction
-Environment data → Multilayer perceptron ↗
-```
-
-### 2. AttentionGxE
-
-Standard attention model using 4 attention heads to capture interactions between genotype and environmental features.
+1. **Multi-head Self-Attention Mechanism** - Uses 8 attention heads to capture richer feature relationships
+2. **Deep Feature Extraction** - Three-layer deep encoder networks for genotype and environmental data
+3. **Bilinear Interaction Layer** - Explicitly models non-linear relationships between genotype and environment
+4. **Hierarchical Feature Fusion** - Combines attention-processed features and direct interaction features
 
 ```
-Genotype data → Encoder → Multi-head attention mechanism → Feature fusion → Phenotype prediction
-Environment data → Encoder ↗
+Genotype data → Deep Encoder → Self-Attention → Interaction Layer → Feature Fusion → Trait Prediction
+Environment data → Deep Encoder ↗          ↗           ↗
+                      Bilinear Interaction Layer ─────┘
 ```
 
-### 3. CrossAttentionGxE
-
-Cross-attention model with 8 attention heads and a bilinear interaction layer to enhance genotype-environment interaction modeling.
-
-```
-Genotype data → Deep encoder → Self-attention mechanism → Interaction layer → Phenotype prediction
-Environment data → Deep encoder → Bilinear interaction layer ↗
-```
+**Model Architecture Details:**
+- **Genotype Encoder**: Three-layer fully connected network with LeakyReLU activation, batch normalization, and dropout regularization
+- **Environment Encoder**: Same structure as the genotype encoder, specialized for processing environmental features
+- **Self-Attention Processing**: Combines genotype and environment features as a sequence, applies multi-head self-attention
+- **Interaction Modeling**: Combines attention-processed features and bilinear interaction features
+- **Prediction Layer**: Progressively dimensionality-reducing fully connected network, outputs final trait prediction value
 
 ## Data Processing
 
@@ -68,7 +63,7 @@ The project processes three types of data:
    - Time series data containing various meteorological and soil parameters
 
 3. **Phenotype Data** (characteristic/*.txt):
-   - Trait phenotype of each genotype under specific environments
+   - Trait performance of each genotype under specific environments
    - File naming format: "location_year.txt"
 
 ### Data Processing Workflow
@@ -118,10 +113,12 @@ The project employs three complementary experimental designs to comprehensively 
 │   │   ├── environment/     # Environmental data folder
 │   │   └── characteristic/  # Phenotype data folder
 │   └── ...                  # Other traits
+├── basedata1/               # Additional training data
 ├── testdata/                # Testing data folder
 ├── models.py                # Model definitions
 ├── utils.py                 # Utility functions
 ├── trainer.py               # Trainer
+├── train_evaluate.py        # Training and evaluation script
 ├── main1.py                 # Experiment 1 main program
 ├── main2.py                 # Experiment 2 main program
 ├── main3.py                 # Experiment 3 main program
@@ -141,7 +138,7 @@ python main2.py
 python main3.py
 
 # Run complete experiment workflow
-python run_experiment.py
+python run_experiment.py --basedata basedata --basedata1 basedata1 --testdata testdata --output results
 ```
 
 ### Interpreting Results
@@ -174,5 +171,4 @@ After executing experiments, the following results will be generated:
 
 ```bash
 pip install torch numpy pandas scikit-learn matplotlib
-
 ``` 

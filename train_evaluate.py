@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from models import DeepGxE, CrossAttentionGxE, AttentionGxE
+from models import AttGEINet
 from utils import (load_genotype_data, load_environment_data, load_phenotype_data, 
                   evaluate_model, standardize_genotype, standardize_environment, 
                   CropDataset, normalize_phenotypes, inverse_normalize_predictions,
@@ -71,12 +71,8 @@ class TrainEvaluator:
     
     def create_model(self, geno_dim, env_dim):
         """Create model"""
-        if self.model_type.lower() == 'deepgxe':
-            return DeepGxE(geno_dim, env_dim, hidden_dim=self.hidden_dim)
-        elif self.model_type.lower() == 'crossattention':
-            return CrossAttentionGxE(geno_dim, env_dim, hidden_dim=self.hidden_dim, num_heads=self.num_heads)
-        else:  # default to AttentionGxE
-            return AttentionGxE(geno_dim, env_dim, hidden_dim=self.hidden_dim, num_heads=self.num_heads)
+        # Always return AttGEINet regardless of model_type parameter
+        return AttGEINet(geno_dim, env_dim, hidden_dim=self.hidden_dim, num_heads=self.num_heads)
     
     def load_combined_data(self, trait_dir):
         """Load and combine data from basedata and basedata1"""

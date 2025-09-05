@@ -27,9 +27,7 @@ def main():
     parser.add_argument("--basedata1", type=str, default="basedata1", help="basedata1 directory path")
     parser.add_argument("--testdata", type=str, default="testdata", help="testdata directory path")
     parser.add_argument("--output", type=str, default="results", help="Output directory path")
-    parser.add_argument("--model", type=str, default="attention", 
-                      choices=["deepgxe", "crossattention", "attention"],
-                      help="Model type: deepgxe, crossattention, attention")
+    parser.add_argument("--model", type=str, default="attgeinet", help="Model type (only AttGEI-Net is supported)")
     parser.add_argument("--traits", nargs='+', help="Specify traits list for training (optional)")
     parser.add_argument("--skip_training", action="store_true", help="Skip training, only summarize results")
     args = parser.parse_args()
@@ -43,7 +41,7 @@ def main():
     logging.info(f"- basedata1: {args.basedata1}")
     logging.info(f"- testdata: {args.testdata}")
     logging.info(f"- Output directory: {args.output}")
-    logging.info(f"- Model type: {args.model}")
+    logging.info(f"- Model type: {args.model} (AttGEI-Net)")
     
     # Get all trait directories
     if args.traits:

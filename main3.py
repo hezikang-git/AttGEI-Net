@@ -11,29 +11,27 @@ import torch
 from torch.utils.data import DataLoader
 import pandas as pd
 from utils import prepare_data_experiment3, CropDataset, extend_environment_features, create_stratified_folds
-from models import DeepGxE, AttentionGxE, CrossAttentionGxE
+from models import AttGEINet
 from trainer import Trainer
 from sklearn.model_selection import KFold
 
 def create_ensemble_models(geno_dim, env_dim, device):
-    """Create model ensemble"""
+    """Create model ensemble using different configurations of AttGEINet"""
     models = []
     
-    # Create three different model architectures
-    hidden_dim = 512
-    dropout = 0.2
+    # Create three different configurations of AttGEINet
     
-    # Model 1: Cross-attention model
-    models.append(CrossAttentionGxE(geno_dim, env_dim, hidden_dim=hidden_dim, 
-                                      num_heads=8, dropout=dropout).to(device))
+    # Model 1: Large model with many heads
+    models.append(AttGEINet(geno_dim, env_dim, hidden_dim=512, 
+                          num_heads=8, dropout=0.2).to(device))
     
-    # Model 2: Standard attention model
-    models.append(AttentionGxE(geno_dim, env_dim, hidden_dim=hidden_dim, 
-                               num_heads=4, dropout=dropout).to(device))
+    # Model 2: Medium model with balanced configuration
+    models.append(AttGEINet(geno_dim, env_dim, hidden_dim=384, 
+                          num_heads=6, dropout=0.25).to(device))
     
-    # Model 3: Deep MLP model
-    models.append(DeepGxE(geno_dim, env_dim, hidden_dim=hidden_dim, 
-                         dropout=dropout).to(device))
+    # Model 3: Smaller model with fewer heads
+    models.append(AttGEINet(geno_dim, env_dim, hidden_dim=256, 
+                          num_heads=4, dropout=0.3).to(device))
     
     return models
 

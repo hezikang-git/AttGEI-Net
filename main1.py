@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 import pandas as pd
 from sklearn.model_selection import KFold
 from utils import prepare_data_experiment1, CropDataset
-from models import AttentionGxE
+from models import AttGEINet
 from trainer import Trainer
 
 def main():
@@ -55,11 +55,11 @@ def main():
         train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
         test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
         
-        # Create enhanced multi-head attention model
-        hidden_dim = 256  # Increase model capacity
-        num_heads = 4     # Use 4 attention heads
+        # Create enhanced cross-attention model
+        hidden_dim = 512  # Increase model capacity
+        num_heads = 8     # Use 8 attention heads
         dropout = 0.2     # Reduce dropout to increase information flow
-        model = AttentionGxE(geno_dim, env_dim, hidden_dim=hidden_dim, num_heads=num_heads, dropout=dropout)
+        model = AttGEINet(geno_dim, env_dim, hidden_dim=hidden_dim, num_heads=num_heads, dropout=dropout)
         
         # Create trainer - use smaller learning rate
         trainer = Trainer(model, device, lr=0.0003, weight_decay=1e-5)
